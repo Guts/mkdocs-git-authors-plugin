@@ -1,0 +1,26 @@
+site_name: "git-authors Plugin"
+site_description: "Plugin to add git info to MkDocs sites"
+use_directory_urls: false
+
+# Theme
+theme:
+  name: material
+  custom_dir: docs/overrides
+
+# Plugins
+plugins:
+  - search
+  - git-authors:
+      show_contribution: true
+      show_line_count: true
+      count_empty_lines: true
+
+nav:
+  - index.md
+  - usage.md
+  - options.md
+  - mailmap.md
+  - Contributing: contributing.md
+
+markdown_extensions:
+  - markdown.extensions.codehilite

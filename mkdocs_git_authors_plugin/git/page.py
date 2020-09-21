@@ -4,6 +4,8 @@ import logging
 from .repo import Repo, AbstractRepoObject
 from .command import GitCommand, GitCommandError
 
+logger = logging.getLogger("mkdocs.plugins")
+
 
 class Page(AbstractRepoObject):
     """
@@ -16,7 +18,7 @@ class Page(AbstractRepoObject):
 
     def __init__(self, repo: Repo, path: Path):
         """
-        Instantiante a Page object
+        Instantiate a Page object
 
         Args:
             repo: Reference to the global Repo instance
@@ -30,8 +32,9 @@ class Page(AbstractRepoObject):
         try:
             self._process_git_blame()
         except GitCommandError:
-            logging.warning(
-                "%s has not been committed yet. Lines are not counted" % path
+            logger.warning(
+                "[git-authors-plugin] %s has not been committed yet. Lines are not counted"
+                % path
             )
 
     def add_total_lines(self, cnt: int = 1):
@@ -125,8 +128,14 @@ class Page(AbstractRepoObject):
         cmd = GitCommand("blame", ["--porcelain", str(self._path)])
         cmd.run()
 
+        lines = cmd.stdout()
+
+        # in case of empty, non-committed files, raise error
+        if len(lines) == 0:
+            raise GitCommandError
+
         commit_data = {}
-        for line in cmd.stdout():
+        for line in lines:
             key = line.split(" ")[0]
             m = re_sha.match(key)
             if m:

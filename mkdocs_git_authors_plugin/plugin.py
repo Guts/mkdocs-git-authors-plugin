@@ -102,9 +102,9 @@ class GitAuthorsPlugin(BasePlugin):
             )
         return html
 
-    def on_page_markdown(self, markdown, page, config, files):
+    def on_page_markdown(self, markdown, page, config, files, **kwargs):
         """
-        Replace jinja tag {{ git_authors_summary }} in markdown.
+        Replace jinja tags in markdown.
 
         The page_markdown event is called after the page's markdown is loaded
         from file and can be used to alter the Markdown source text.
@@ -169,6 +169,9 @@ class GitAuthorsPlugin(BasePlugin):
         page_obj = self.repo().page(path)
         authors = page_obj.get_authors()
 
+        page_authors = util.page_authors_summary(page_obj, self.config)
+        site_authors = util.site_authors_summary(self.repo().get_authors(), self.config)
+
         # NOTE: last_datetime is currently given as a
         # string in the format
         # '2020-02-24 17:49:14 +0100'
@@ -176,14 +179,17 @@ class GitAuthorsPlugin(BasePlugin):
         # datetime.datetime object with tzinfo instead.
         # Should this be formatted differently?
         context["git_info"] = {
-            "page_authors": util.page_authors_summary(page_obj, self.config),
-            "site_authors": util.site_authors_summary(
-                self.repo().get_authors(), self.config
-            ),
+            "page_authors": util.page_authors(authors, path),
+            "site_authors": util.page_authors(self.repo().get_authors(), path),
         }
+
+        # Make available the same markdown tags in jinja context
+        context["git_page_authors"] = page_authors
+        context["git_site_authors"] = site_authors
 
         # For backward compatibility, deprecate in 1.2
         context["git_authors"] = util.page_authors(authors, path)
+        context["git_authors_summary"] = page_authors
 
         return context
 
